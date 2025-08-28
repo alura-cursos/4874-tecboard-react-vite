@@ -17,6 +17,8 @@ import { styled } from '@mui/material/styles'
 
 import tecboardLogo from '../assets/tecboard.svg'
 import bannerImage from '../assets/banner.png'
+import { useState } from 'react'
+import { eventSchema } from '../schema'
 
 const eventCategories = [
   {
@@ -48,7 +50,7 @@ const eventCategories = [
   }
 ]
 
-const Chip = styled(Box)(({theme}) => ({
+const Chip = styled(Box)(({ theme }) => ({
   display: 'inline-flex',
   backgroundColor: theme.palette.textSecondary,
   padding: '8px',
@@ -57,6 +59,32 @@ const Chip = styled(Box)(({theme}) => ({
 }))
 
 export function Board() {
+  const [formData, setFormData] = useState({
+    name: '',
+    date: '',
+    theme: ''
+  })
+
+  const [error, setError] = useState('')
+
+  function handleChange(event) {
+    const { name, value } = event.target
+    setFormData((prevFormData) => ({...prevFormData, [name]: value}))
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault()
+
+    const result = eventSchema.safeParse(formData)
+
+    if (result.success) {
+      console.log(result.data)
+    } else {
+      const firstError = result.error.issues[0]
+      setError(firstError.message)
+    }
+  }
+
   return (
     <Box sx={{ height: '100vh', backgroundColor: '#06151A' }}>
       {/* Header */}
@@ -103,27 +131,58 @@ export function Board() {
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', backgroundColor: '#06151A', py: 8 }}>
 
         {/* Formulário */}
-        <Box sx={{ backgroundColor: '#212121', width: '100%', maxWidth: '384px', py: '32px', px: '28px', borderRadius: 2 }}>
+        <Box
+          component='form'
+          onSubmit={handleSubmit}
+          sx={{
+            backgroundColor: '#212121',
+            width: '100%',
+            maxWidth: '384px',
+            py: '32px',
+            px: '28px',
+            borderRadius: 2
+          }}
+        >
           <Typography>Preencha para criar um evento:</Typography>
+          <Typography>Erro: {error}</Typography>
           <Stack spacing={2}>
             <FormControl fullWidth>
               <InputLabel shrink htmlFor='name' sx={{ position: 'static', transform: 'none', mb: 1 }}>Qual o nome do evento?</InputLabel>
-              <OutlinedInput id='name' placeholder='Summer dev hits' fullWidth sx={{ height: '36px' }} />
+              <OutlinedInput
+                id='name'
+                name='name'
+                placeholder='Summer dev hits'
+                fullWidth
+                sx={{ height: '36px' }}
+                onChange={handleChange}
+                value={formData.name}
+              />
             </FormControl>
 
             <FormControl fullWidth>
               <InputLabel shrink htmlFor='date' sx={{ position: 'static', transform: 'none', mb: 1 }}>Data do evento</InputLabel>
-              <OutlinedInput id='date' placeholder='XX/XX/XXXX' fullWidth sx={{ height: '36px' }} />
+              <OutlinedInput
+                id='date'
+                name='date'
+                placeholder='XX/XX/XXXX'
+                fullWidth
+                sx={{ height: '36px' }}
+                onChange={handleChange}
+                value={formData.date}
+              />
             </FormControl>
 
             <FormControl fullWidth>
               <InputLabel shrink htmlFor='theme' sx={{ position: 'static', transform: 'none', mb: 1 }}>Tema do evento</InputLabel>
               <Select
                 id='theme'
+                name='theme'
                 defaultValue=''
                 displayEmpty
                 fullWidth
                 sx={{ height: '36px' }}
+                onChange={handleChange}
+                value={formData.theme}
               >
                 <MenuItem value='' disabled>
                   Selecione uma opção
@@ -134,7 +193,7 @@ export function Board() {
               </Select>
             </FormControl>
 
-            <Button sx={{ alignSelf: 'center' }}>Criar evento</Button>
+            <Button type='submit' sx={{ alignSelf: 'center' }}>Criar evento</Button>
           </Stack>
         </Box>
 

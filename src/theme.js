@@ -51,6 +51,7 @@ const theme = createTheme({
           display: 'flex',
           alignItems: 'center',
           fontSize: '16px',
+          color: '#fff',
           '&::placeholder': {
             color: '#33353F',
             opacity: 1,
@@ -73,13 +74,13 @@ const theme = createTheme({
             borderWidth: '2px',
           },
           '&.MuiSelect-select.MuiSelect-outlined': {
-            color: '#33353F',
+            color: '#fff',
             fontSize: '16px',
           },
         },
         select: {
           '&[aria-expanded="false"]': {
-            color: '#33353F',
+            color: '#fff',
             fontSize: '16px',
           },
         },

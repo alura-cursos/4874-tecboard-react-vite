@@ -27,3 +27,42 @@ const result = userSchema.parse(user)
 // }
 
 console.log(result)
+
+// .refine
+
+const passwordSchema = z.object({
+  password: z.string(),
+  confirmPassword: z.string(),
+}).refine(({password, confirmPassword}) => password === confirmPassword, {
+  error: "Senhas não deram match",
+  path: ["confirmPassword"]
+})
+
+const passwords = {
+  password: '1234',
+  confirmPassword: '123'
+}
+
+const resultPassword = passwordSchema.safeParse(passwords)
+
+if (resultPassword.success) {
+  console.log(resultPassword.data)
+} else {
+  console.log(resultPassword.error.message)
+}
+
+// .coercion
+
+const coercionSchema = z.coerce.string()
+
+const resultCoercion = coercionSchema.parse(user.isDev)
+
+console.log({resultCoercion})
+
+// .transform
+
+const transformSchema = z.string().transform((val) => `${val} Lemos`)
+
+const resultTransform = transformSchema.parse(user.name)
+
+console.log({resultTransform})

@@ -17,8 +17,9 @@ import { styled } from '@mui/material/styles'
 
 import tecboardLogo from '../assets/tecboard.svg'
 import bannerImage from '../assets/banner.png'
-import { useState } from 'react'
 import { eventSchema } from '../schema'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 
 const eventCategories = [
   {
@@ -59,30 +60,14 @@ const Chip = styled(Box)(({ theme }) => ({
 }))
 
 export function Board() {
-  const [formData, setFormData] = useState({
-    name: '',
-    date: '',
-    theme: ''
+  const { handleSubmit, control, formState: {errors} } = useForm({
+    resolver: zodResolver(eventSchema)
   })
 
-  const [error, setError] = useState('')
+  console.log({errors})
 
-  function handleChange(event) {
-    const { name, value } = event.target
-    setFormData((prevFormData) => ({...prevFormData, [name]: value}))
-  }
-
-  function handleSubmit(event) {
-    event.preventDefault()
-
-    const result = eventSchema.safeParse(formData)
-
-    if (result.success) {
-      console.log(result.data)
-    } else {
-      const firstError = result.error.issues[0]
-      setError(firstError.message)
-    }
+  function handleOnSubmit(data) {
+    console.log(data)
   }
 
   return (
@@ -133,7 +118,7 @@ export function Board() {
         {/* Formulário */}
         <Box
           component='form'
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmit(handleOnSubmit)}
           sx={{
             backgroundColor: '#212121',
             width: '100%',
@@ -144,53 +129,58 @@ export function Board() {
           }}
         >
           <Typography>Preencha para criar um evento:</Typography>
-          <Typography>Erro: {error}</Typography>
           <Stack spacing={2}>
             <FormControl fullWidth>
               <InputLabel shrink htmlFor='name' sx={{ position: 'static', transform: 'none', mb: 1 }}>Qual o nome do evento?</InputLabel>
-              <OutlinedInput
-                id='name'
+              <Controller
                 name='name'
-                placeholder='Summer dev hits'
-                fullWidth
-                sx={{ height: '36px' }}
-                onChange={handleChange}
-                value={formData.name}
+                control={control}
+                render={({ field }) => <OutlinedInput
+                  id='name'
+                  placeholder='Summer dev hits'
+                  fullWidth
+                  sx={{ height: '36px' }}
+                  {...field}
+                />}
               />
             </FormControl>
 
             <FormControl fullWidth>
               <InputLabel shrink htmlFor='date' sx={{ position: 'static', transform: 'none', mb: 1 }}>Data do evento</InputLabel>
-              <OutlinedInput
-                id='date'
+              <Controller
                 name='date'
-                placeholder='XX/XX/XXXX'
-                fullWidth
-                sx={{ height: '36px' }}
-                onChange={handleChange}
-                value={formData.date}
+                control={control}
+                render={({ field }) => <OutlinedInput
+                  id='date'
+                  placeholder='XX/XX/XXXX'
+                  fullWidth
+                  sx={{ height: '36px' }}
+                  {...field}
+                />}
               />
             </FormControl>
 
             <FormControl fullWidth>
               <InputLabel shrink htmlFor='theme' sx={{ position: 'static', transform: 'none', mb: 1 }}>Tema do evento</InputLabel>
-              <Select
-                id='theme'
+              <Controller
                 name='theme'
-                defaultValue=''
-                displayEmpty
-                fullWidth
-                sx={{ height: '36px' }}
-                onChange={handleChange}
-                value={formData.theme}
-              >
-                <MenuItem value='' disabled>
-                  Selecione uma opção
-                </MenuItem>
-                <MenuItem value='Front-end'>Front-end</MenuItem>
-                <MenuItem value='Design'>Design</MenuItem>
-                <MenuItem value='Marketing'>Marketing</MenuItem>
-              </Select>
+                control={control}
+                render={({ field }) => <Select
+                  id='theme'
+                  defaultValue=''
+                  displayEmpty
+                  fullWidth
+                  sx={{ height: '36px' }}
+                  {...field}
+                >
+                  <MenuItem value='' disabled>
+                    Selecione uma opção
+                  </MenuItem>
+                  <MenuItem value='Front-end'>Front-end</MenuItem>
+                  <MenuItem value='Design'>Design</MenuItem>
+                  <MenuItem value='Marketing'>Marketing</MenuItem>
+                </Select>}
+              />
             </FormControl>
 
             <Button type='submit' sx={{ alignSelf: 'center' }}>Criar evento</Button>

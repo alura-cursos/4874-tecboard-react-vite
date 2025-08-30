@@ -21,6 +21,7 @@ import { eventSchema } from '../schema'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 
 const Chip = styled(Box)(({ theme }) => ({
   display: 'inline-flex',
@@ -31,16 +32,18 @@ const Chip = styled(Box)(({ theme }) => ({
 }))
 
 export function Board() {
-  async function getEvents() {
-    const response = await fetch('http://localhost:3000/events')
+  const queryClient = useQueryClient()
+
+  const [page, setPage] = useState(1)
+
+  async function getEvents(page = 1) {
+    const response = await fetch(`http://localhost:3000/events?_page=${page}&_per_page=4`)
     return response.json()
   }
 
-  const queryClient = useQueryClient()
-
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['getEvents'],
-    queryFn: getEvents
+  const { data: eventsData, isLoading, isError } = useQuery({
+    queryKey: ['getEvents', page],
+    queryFn: () => getEvents(page)
   })
 
   async function postEvents(event) {
@@ -191,9 +194,20 @@ export function Board() {
 
         {/* Lista de eventos */}
         <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '1200px', mt: '60px', gap: '64px' }}>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button onClick={() => setPage(eventsData.prev)} disabled={page === 1}>Página anterior</Button>
+            <Button
+              onClick={() => {
+                if (eventsData.next) {
+                  setPage(eventsData.next)
+                }
+              }}
+            >Próxima página</Button>
+          </Box>
+
           <Grid container spacing={3} sx={{ maxWidth: '1200px', mx: 'auto' }}>
 
-            {!isError && !isLoading && data.map((event) => (
+            {!isError && !isLoading && eventsData.data.map((event) => (
               <Grid item xs={12} sm={6} md={4} key={event.id}>
                 <Card sx={{ width: '282px' }}>
                   <CardMedia component='img' height='236px' image={event.image} alt={event.name} />

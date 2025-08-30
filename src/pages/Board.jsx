@@ -20,7 +20,7 @@ import bannerImage from '../assets/banner.png'
 import { eventSchema } from '../schema'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 const Chip = styled(Box)(({ theme }) => ({
   display: 'inline-flex',
@@ -31,23 +31,42 @@ const Chip = styled(Box)(({ theme }) => ({
 }))
 
 export function Board() {
+  async function getEvents() {
+    const response = await fetch('http://localhost:3000/events')
+    return response.json()
+  }
+
+  const queryClient = useQueryClient()
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['getEvents'],
+    queryFn: getEvents
+  })
+
+  async function postEvents(event) {
+    const response = await fetch('http://localhost:3000/events', {
+      method: 'POST',
+      body: JSON.stringify(event)
+    })
+    return response.json()
+  }
+
+  const postEventMutation = useMutation({
+    mutationKey: ['postEvents'],
+    mutationFn: postEvents,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['getEvents'] })
+    }
+  })
+
   const { handleSubmit, control } = useForm({
     resolver: zodResolver(eventSchema)
   })
 
   function handleOnSubmit(data) {
+    postEventMutation.mutate(data)
     console.log(data)
   }
-
-  async function getEvents() {
-    const response = await fetch('http://localhost:3000/event')
-    return response.json()
-  }
-
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['events'],
-    queryFn: getEvents
-  })
 
   return (
     <Box sx={{ height: '100vh', backgroundColor: '#06151A' }}>
@@ -172,28 +191,23 @@ export function Board() {
 
         {/* Lista de eventos */}
         <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '1200px', mt: '60px', gap: '64px' }}>
-          {!isError && !isLoading && data.map((category) => (
-            <Box key={category.name}>
-              <Typography>{category.name}</Typography>
+          <Grid container spacing={3} sx={{ maxWidth: '1200px', mx: 'auto' }}>
 
-              <Grid container spacing={3} sx={{ maxWidth: '1200px', mx: 'auto' }}>
-                {category.events.map((event) => (
-                  <Grid item xs={12} sm={6} md={4} key={event.id}>
-                    <Card sx={{ width: '282px' }}>
-                      <CardMedia component='img' height='236px' image={event.image} alt={event.name} />
-                      <CardContent sx={{ flexGrow: 1, py: 3, px: 2, backgroundColor: '#212121' }}>
-                        <Chip>
-                          <Typography variant='caption'>{event.theme}</Typography>
-                        </Chip>
-                        <Typography>{event.date}</Typography>
-                        <Typography>{event.name}</Typography>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
+            {!isError && !isLoading && data.map((event) => (
+              <Grid item xs={12} sm={6} md={4} key={event.id}>
+                <Card sx={{ width: '282px' }}>
+                  <CardMedia component='img' height='236px' image={event.image} alt={event.name} />
+                  <CardContent sx={{ flexGrow: 1, py: 3, px: 2, backgroundColor: '#212121' }}>
+                    <Chip>
+                      <Typography variant='caption'>{event.theme}</Typography>
+                    </Chip>
+                    <Typography>{event.date}</Typography>
+                    <Typography>{event.name}</Typography>
+                  </CardContent>
+                </Card>
               </Grid>
-            </Box>
-          ))}
+            ))}
+          </Grid>
         </Box>
       </Box>
     </Box>
